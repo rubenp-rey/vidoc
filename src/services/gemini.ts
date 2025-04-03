@@ -41,7 +41,7 @@ export class GeminiService {
       })
 
       // Buscar documentos relevantes
-      const relevantDoc = await this.embeddingsService.search(lastUserMessage.content);
+      const relevantDoc = await this.embeddingsService.findMostRelevant(lastUserMessage.content);
       
       // Construir el contexto con los documentos relevantes
       let context = '';

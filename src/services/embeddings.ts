@@ -10,9 +10,7 @@ export interface DocumentEmbedding {
 
 export class EmbeddingsService {
   private static instance: EmbeddingsService;
-  private documents: string[] = [];
-  private embeddings: DocumentEmbedding[] = [];
-  private termFrequency: { [key: string]: number } = {};
+  private documents: DocumentEmbedding[] = [];
   private documentFrequency: { [key: string]: number } = {};
 
   private constructor() {}
@@ -31,93 +29,102 @@ export class EmbeddingsService {
       .filter(word => word.length > 0);
   }
 
-  private updateFrequencies(tokens: string[]) {
-    // Actualizar frecuencia de términos
+  private computeTF(tokens: string[]): { [key: string]: number } {
+    const termCount: { [key: string]: number } = {};
     tokens.forEach(token => {
-      this.termFrequency[token] = (this.termFrequency[token] || 0) + 1;
+      termCount[token] = (termCount[token] || 0) + 1;
     });
 
-    // Actualizar frecuencia de documentos
-    new Set(tokens).forEach(token => {
-      this.documentFrequency[token] = (this.documentFrequency[token] || 0) + 1;
+    // Normalizar TF dividiendo entre el total de términos
+    const totalTerms = tokens.length;
+    Object.keys(termCount).forEach(term => {
+      termCount[term] /= totalTerms;
     });
+
+    return termCount;
+  }
+
+  private computeIDF(): { [key: string]: number } {
+    const N = this.documents.length;
+    const idf: { [key: string]: number } = {};
+
+    Object.keys(this.documentFrequency).forEach(term => {
+      idf[term] = Math.log((N + 1) / (this.documentFrequency[term] + 1)) + 1;
+    });
+
+    return idf;
   }
 
   public async addDocument(content: string, filename: string): Promise<DocumentEmbedding> {
+    const tokens = this.tokenize(content);
+    const tf = this.computeTF(tokens);
+
+    // Actualizar DF
+    new Set(tokens).forEach(token => {
+      this.documentFrequency[token] = (this.documentFrequency[token] || 0) + 1;
+    });
+
+    // Recalcular IDF para todos los documentos
+    const idf = this.computeIDF();
+
+    // Calcular TF-IDF para este documento
+    const tfidf: { [key: string]: number } = {};
+    Object.keys(tf).forEach(term => {
+      tfidf[term] = tf[term] * (idf[term] || 0);
+    });
+
     const document: DocumentEmbedding = {
       id: crypto.randomUUID(),
       content,
       metadata: { filename, timestamp: new Date() },
-      tfidf: {}
+      tfidf
     };
 
-    const tokens = this.tokenize(content);
-    this.documents.push(content);
-    this.updateFrequencies(tokens);
-
-    // Calcular TF-IDF para este documento
-    const N = this.documents.length;
-    tokens.forEach(token => {
-      const tf = this.termFrequency[token] / tokens.length;
-      const idf = Math.log(N / this.documentFrequency[token]);
-      document.tfidf[token] = tf * idf;
-    });
-
-    this.embeddings.push(document);
+    this.documents.push(document);
     return document;
   }
 
-  public async search(query: string): Promise<DocumentEmbedding | null> {
-    if (this.embeddings.length === 0) return null;
-
+  public findMostRelevant(query: string): DocumentEmbedding | null {
     const queryTokens = this.tokenize(query);
-    const queryTfidf: { [key: string]: number } = {};
+    const queryTF = this.computeTF(queryTokens);
+    const idf = this.computeIDF();
 
-    // Calcular TF-IDF para la consulta
-    queryTokens.forEach(token => {
-      const tf = this.termFrequency[token] / queryTokens.length;
-      const idf = Math.log(this.documents.length / this.documentFrequency[token]);
-      queryTfidf[token] = tf * idf;
+    // Calcular TF-IDF de la query
+    const queryTFIDF: { [key: string]: number } = {};
+    Object.keys(queryTF).forEach(term => {
+      queryTFIDF[term] = queryTF[term] * (idf[term] || 0);
     });
 
-    // Calcular similitud con cada documento y obtener el más relevante
-    const result = this.embeddings.map(doc => ({
-      ...doc,
-      similarity: this.cosineSimilarity(doc.tfidf, queryTfidf)
-    }))
-    .sort((a, b) => b.similarity - a.similarity)[0];
+    let bestMatch: DocumentEmbedding | null = null;
+    let bestScore = -Infinity;
 
-    return result;
+    this.documents.forEach(doc => {
+      const score = this.cosineSimilarity(queryTFIDF, doc.tfidf);
+      if (score > bestScore) {
+        bestScore = score;
+        bestMatch = doc;
+      }
+    });
+
+    return bestMatch;
   }
 
-  private cosineSimilarity(doc1: { [key: string]: number }, doc2: { [key: string]: number }): number {
-    const terms = new Set([...Object.keys(doc1), ...Object.keys(doc2)]);
+  private cosineSimilarity(vec1: { [key: string]: number }, vec2: { [key: string]: number }): number {
+    const terms = new Set([...Object.keys(vec1), ...Object.keys(vec2)]);
+    
     let dotProduct = 0;
-    let magnitude1 = 0;
-    let magnitude2 = 0;
+    let normVec1 = 0;
+    let normVec2 = 0;
 
     terms.forEach(term => {
-      const val1 = doc1[term] || 0;
-      const val2 = doc2[term] || 0;
-      dotProduct += val1 * val2;
-      magnitude1 += val1 * val1;
-      magnitude2 += val2 * val2;
+      const v1 = vec1[term] || 0;
+      const v2 = vec2[term] || 0;
+
+      dotProduct += v1 * v2;
+      normVec1 += v1 * v1;
+      normVec2 += v2 * v2;
     });
 
-    magnitude1 = Math.sqrt(magnitude1);
-    magnitude2 = Math.sqrt(magnitude2);
-
-    return dotProduct / (magnitude1 * magnitude2);
-  }
-
-  public getEmbeddings(): DocumentEmbedding[] {
-    return this.embeddings;
-  }
-
-  public clearEmbeddings() {
-    this.embeddings = [];
-    this.documents = [];
-    this.termFrequency = {};
-    this.documentFrequency = {};
+    return normVec1 && normVec2 ? dotProduct / (Math.sqrt(normVec1) * Math.sqrt(normVec2)) : 0;
   }
 }
