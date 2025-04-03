@@ -41,18 +41,23 @@ export class GeminiService {
       })
 
       // Buscar documentos relevantes
-      const relevantDoc = await this.embeddingsService.findMostRelevant(lastUserMessage.content);
+      const relevantDocs = await this.embeddingsService.findMostRelevants(lastUserMessage.content);
       
       // Construir el contexto con los documentos relevantes
       let context = '';
-      if (relevantDoc) {
-        context = 'Basado en los siguientes documentos:\n\n';
-        context += `Documento "${relevantDoc.metadata.filename}":\n${relevantDoc.content}\n\n`;
+      if (relevantDocs) {
+        for(let i=0; i<2; i++){
+          context += `Document context "${relevantDocs[i].metadata.filename}":\n${relevantDocs[i].content}\n\n`;
+        }
       }
 
-      // Construir el prompt completo
-      const prompt = 'Eres un asistente que responde basándose en el contexto proporcionado por documetnos. Tu formato de respuesa debe estar bien formateado y no debe contener caracteres especiales como *, #, etc. Utiliza saltos de linea para separar las ideas.' 
-        + 'Historial de conversación: ' + conversationHistory + '\n' 
+      console.log(relevantDocs)
+    
+      // Build the complete prompt
+      const prompt = 'You are an assistant for a company called Tinybird that answers the user’s questions based on the context provided by documents. You may answer questions using past documents that are no longer passed to you.\n'
+        + 'Your response should not contain special characters like *, #, etc.' 
+        + 'Conversation context: ' + conversationHistory + '\n' 
+        + 'User’s question: ' + lastUserMessage.content + '\n'
         + context;
         
       console.log(prompt);
@@ -77,10 +82,10 @@ export class GeminiService {
       const data = await response.json();
       return {
         text: data.candidates[0].content.parts[0].text,
-        source: relevantDoc?.metadata.filename,
-        relevantDoc: relevantDoc ? {
-          filename: relevantDoc.metadata.filename,
-          content: relevantDoc.content
+        source: relevantDocs[0]?.metadata.filename,
+        relevantDoc: relevantDocs[0] ? {
+          filename: relevantDocs[0].metadata.filename,
+          content: relevantDocs[0].content
         } : undefined
       };
     } catch (error) {

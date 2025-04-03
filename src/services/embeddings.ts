@@ -84,30 +84,30 @@ export class EmbeddingsService {
     return document;
   }
 
-  public findMostRelevant(query: string): DocumentEmbedding | null {
+  public findMostRelevants(query: string): DocumentEmbedding[] {
     const queryTokens = this.tokenize(query);
     const queryTF = this.computeTF(queryTokens);
     const idf = this.computeIDF();
-
+  
     // Calcular TF-IDF de la query
     const queryTFIDF: { [key: string]: number } = {};
     Object.keys(queryTF).forEach(term => {
       queryTFIDF[term] = queryTF[term] * (idf[term] || 0);
     });
-
-    let bestMatch: DocumentEmbedding | null = null;
-    let bestScore = -Infinity;
-
-    this.documents.forEach(doc => {
+  
+    // Calcular score para cada documento
+    const scoredDocs = this.documents.map(doc => {
       const score = this.cosineSimilarity(queryTFIDF, doc.tfidf);
-      if (score > bestScore) {
-        bestScore = score;
-        bestMatch = doc;
-      }
+      return { doc, score };
     });
-
-    return bestMatch;
+  
+    // Ordenar de mayor a menor
+    scoredDocs.sort((a, b) => b.score - a.score);
+  
+    // Devolver solo los documentos (sin el score)
+    return scoredDocs.map(item => item.doc);
   }
+  
 
   private cosineSimilarity(vec1: { [key: string]: number }, vec2: { [key: string]: number }): number {
     const terms = new Set([...Object.keys(vec1), ...Object.keys(vec2)]);

@@ -54,7 +54,7 @@ export const Chat: React.FC<ChatProps> = ({ currentFile, onFileSelect }) => {
       }
 
       const assistantMessage: Message = {
-        content: response.text + (response.source ? `\n\nFuente: ${response.source}` : ''),
+        content: response.text,
         role: 'assistant',
         timestamp: new Date()
       };
@@ -74,25 +74,24 @@ export const Chat: React.FC<ChatProps> = ({ currentFile, onFileSelect }) => {
   };
 
   return (
-    <div className="d-flex flex-column h-100 w-100 justify-content-between">
-        <div 
-          ref={messagesContainerRef}
-          className="d-flex flex-column justify-content-center align-items-center flex-grow-1 overflow-auto p-3 w-100"
-          style={{ maxHeight: 'calc(100vh - 200px)' }}
-        >
-          {messages.length === 0 ? 
-            <div className="d-flex justify-content-center align-items-center">
-              <img className="w-50 opacity-75" src={'./src/assets/askme.png'}></img>
-            </div>
-          :
-          <div>
+    <div className="d-flex flex-column h-100 w-100 flex-grow-1">
+      <div 
+        ref={messagesContainerRef}
+        className="d-flex flex-column flex-grow-1 overflow-auto p-3 w-100"
+      >
+        {messages.length === 0 ? 
+          <div className="d-flex justify-content-center align-items-center flex-grow-1">
+            <img className="w-50 opacity-75" src={'./src/assets/askme.png'} />
+          </div>
+        :
+          <div className="w-100">
             {messages.map((message, index) => (
               <ChatMessage key={index} message={message} />
             ))}
             <div ref={messagesEndRef} />
           </div>
-          }
-        </div>
+        }
+      </div>
       <form onSubmit={handleSubmit} className="p-3 border-top w-100">
         <div className="input-group">
           <input
