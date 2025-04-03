@@ -84,20 +84,30 @@ function App() {
         <div className="d-flex flex-column h-100">
           <div className="p-3 border-bottom d-flex justify-content-between align-items-center">
             <button 
-              className="btn btn-sm btn-primary rounded-circle"
+              className="btn btn-md btn-primary rounded-circle "
               onClick={handleFileOpen}
+              style={{ backgroundColor: '#FFD5C2', color: 'black', border: 'none', height: '2.4rem', width: '2.4rem', padding: '0px' }}
             >
-              <i className="bi bi-plus"></i>
+              <i className="bi bi-plus" style={{fontSize: '1.4rem'}}></i>
             </button>
           </div>
-          <div className="flex-grow-1 overflow-auto">
+          <div className="flex-grow-1 overflow-auto d-flex flex-column justify-content-center align-items-center">
+            {files.length === 0 &&
+              <div className="d-flex flex-column justify-content-center align-items-center flex-grow-1 w-100">
+                <img className="w-50 opacity-75" src={'./src/assets/load.png'}></img>
+              </div>  
+            }
             <div className="list-group list-group-flush">
               {files.map((file, index) => (
                 <button
                   key={index}
-                  className={`list-group-item list-group-item-action ${
-                    selectedFile?.name === file.name ? 'active' : ''
-                  }`}
+                  className={`list-group-item list-group-item-action border-none`}
+                  style={{
+                    backgroundColor: selectedFile?.name === file.name ? '#FFD5C2' : 'white',
+                    color: 'black',
+                    border: 'none',
+                    borderRadius: '0px',
+                  }}
                   onClick={() => handleFileSelect(file)}
                 >
                   {file.name}
@@ -113,9 +123,6 @@ function App() {
         <div className="d-flex h-100 gap-3">
           {/* Área de chat */}
           <div className="card d-flex flex-column" style={{ width: 'calc(50% - 6px)' }}>
-            <div className="card-header">
-              <h5 className="card-title mb-0">Chat</h5>
-            </div>
             <div className="card-body p-0 d-flex flex-column">
               <Chat 
                 currentFile={selectedFile ? { name: selectedFile.name, content: selectedFile.content } : undefined}
@@ -126,13 +133,24 @@ function App() {
 
           {/* Área de visualización de markdown */}
           <div className="card" style={{ width: 'calc(50% - 6px)' }}>
-            <div className="card-header">
-              <h5 className="card-title mb-0">
-                {selectedFile?.name || 'Selecciona un archivo'}
-              </h5>
-            </div>
-            <div className="card-body overflow-auto">
-              <ReactMarkdown>{markdownContent}</ReactMarkdown>
+            {selectedFile &&
+              <div className="card-header bg-white">
+                <h5 className="card-title mb-0">
+                  {selectedFile?.name}
+                </h5>
+              </div>
+            }
+            <div className='d-flex flex-column justify-content-center align-items-center flex-grow-1 overflow-auto w-100'>
+              {
+                selectedFile ?
+                  <div className="card-body overflow-auto">
+                    <ReactMarkdown>{markdownContent}</ReactMarkdown>
+                  </div>
+                :
+                <div className="d-flex justify-content-center align-items-center">
+                  <img className="w-50 opacity-75" src={'./src/assets/document.png'}></img>
+                </div>
+              }
             </div>
           </div>
         </div>

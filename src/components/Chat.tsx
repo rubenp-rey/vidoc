@@ -74,17 +74,25 @@ export const Chat: React.FC<ChatProps> = ({ currentFile, onFileSelect }) => {
   };
 
   return (
-    <div className="d-flex flex-column h-100 w-100">
-      <div 
-        ref={messagesContainerRef}
-        className="flex-grow-1 overflow-auto p-3 w-100"
-        style={{ maxHeight: 'calc(100vh - 200px)' }}
-      >
-        {messages.map((message, index) => (
-          <ChatMessage key={index} message={message} />
-        ))}
-        <div ref={messagesEndRef} />
-      </div>
+    <div className="d-flex flex-column h-100 w-100 justify-content-between">
+        <div 
+          ref={messagesContainerRef}
+          className="d-flex flex-column justify-content-center align-items-center flex-grow-1 overflow-auto p-3 w-100"
+          style={{ maxHeight: 'calc(100vh - 200px)' }}
+        >
+          {messages.length === 0 ? 
+            <div className="d-flex justify-content-center align-items-center">
+              <img className="w-50 opacity-75" src={'./src/assets/askme.png'}></img>
+            </div>
+          :
+          <div>
+            {messages.map((message, index) => (
+              <ChatMessage key={index} message={message} />
+            ))}
+            <div ref={messagesEndRef} />
+          </div>
+          }
+        </div>
       <form onSubmit={handleSubmit} className="p-3 border-top w-100">
         <div className="input-group">
           <input
@@ -92,18 +100,19 @@ export const Chat: React.FC<ChatProps> = ({ currentFile, onFileSelect }) => {
             className="form-control"
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
-            placeholder="Escribe un mensaje..."
+            placeholder="Write your question..."
             disabled={isLoading}
           />
           <button 
             className="btn btn-primary" 
             type="submit"
             disabled={isLoading || !inputMessage.trim()}
+            style={{ backgroundColor: '#FFD5C2', color: 'black', border: 'none' }}
           >
             {isLoading ? (
               <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
             ) : (
-              <i className="bi bi-send"></i>
+              <i className="bi bi-send" style={{fontSize: '1.2rem'}}></i>
             )}
           </button>
         </div>
