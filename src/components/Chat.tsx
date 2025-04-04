@@ -15,6 +15,7 @@ export const Chat: React.FC<ChatProps> = ({ currentFile, onFileSelect }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [focusedDoc, setFocusedDoc] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
 
@@ -33,7 +34,8 @@ export const Chat: React.FC<ChatProps> = ({ currentFile, onFileSelect }) => {
     const newMessage: Message = {
       content: inputMessage,
       role: 'user',
-      timestamp: new Date()
+      timestamp: new Date(),
+      docProposals:[],
     };
 
     setMessages(prev => [...prev, newMessage]);
@@ -46,28 +48,33 @@ export const Chat: React.FC<ChatProps> = ({ currentFile, onFileSelect }) => {
         throw new Error(response.error);
       }
 
-      if (response.relevantDoc && onFileSelect) {
+      if(onFileSelect && response.docProposals != undefined && response.docProposals.length > 0){
         onFileSelect({
-          name: response.relevantDoc.filename,
-          content: response.relevantDoc.content
+          name: response.docProposals[0].metadata.filename,
+          content: response.docProposals[0].content,
         });
       }
 
       const assistantMessage: Message = {
         content: response.text,
         role: 'assistant',
-        timestamp: new Date()
+        timestamp: new Date(),
+        docProposals: response.docProposals ?? [],
       };
 
       setMessages(prev => [...prev, assistantMessage]);
+
     } catch (error) {
       console.error('Error al enviar mensaje:', error);
       const errorMessage: Message = {
         content: 'Lo siento, ha ocurrido un error al procesar tu mensaje.',
         role: 'assistant',
-        timestamp: new Date()
+        timestamp: new Date(),
+        docProposals:[]
       };
+
       setMessages(prev => [...prev, errorMessage]);
+
     } finally {
       setIsLoading(false);
     }

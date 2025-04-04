@@ -1,7 +1,10 @@
+import { DocumentEmbedding } from "@/services/embeddings";
+
 export interface Message {
   role: 'user' | 'assistant';
   content: string;
   timestamp: Date;
+  docProposals: DocumentEmbedding[];
 }
 
 export interface ChatState {
@@ -13,9 +16,5 @@ export interface ChatState {
 export interface ChatResponse {
   text: string;
   error?: string;
-  source?: string;
-  relevantDoc?: {
-    filename: string;
-    content: string;
-  };
+  docProposals?: DocumentEmbedding[];
 } 

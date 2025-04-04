@@ -46,12 +46,10 @@ export class GeminiService {
       // Construir el contexto con los documentos relevantes
       let context = '';
       if (relevantDocs) {
-        for(let i=0; i<2; i++){
-          context += `Document context "${relevantDocs[i].metadata.filename}":\n${relevantDocs[i].content}\n\n`;
-        }
+        relevantDocs.map((doc)=>{
+          context += `Document context "${doc.metadata.filename}":\n${doc.content}\n\n`;
+        })
       }
-
-      console.log(relevantDocs)
     
       // Build the complete prompt
       const prompt = 'You are an assistant for a company called Tinybird that answers the user’s questions based on the context provided by documents. You may answer questions using past documents that are no longer passed to you.\n'
@@ -82,11 +80,7 @@ export class GeminiService {
       const data = await response.json();
       return {
         text: data.candidates[0].content.parts[0].text,
-        source: relevantDocs[0]?.metadata.filename,
-        relevantDoc: relevantDocs[0] ? {
-          filename: relevantDocs[0].metadata.filename,
-          content: relevantDocs[0].content
-        } : undefined
+        docProposals: relevantDocs,
       };
     } catch (error) {
       return {

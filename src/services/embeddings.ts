@@ -101,11 +101,20 @@ export class EmbeddingsService {
       return { doc, score };
     });
   
-    // Ordenar de mayor a menor
     scoredDocs.sort((a, b) => b.score - a.score);
-  
-    // Devolver solo los documentos (sin el score)
-    return scoredDocs.map(item => item.doc);
+
+    const maxScore = scoredDocs[0]?.score || 0;
+    const RELATIVE_THRESHOLD = 0.7; // al menos 50% del mejor
+    const ABSOLUTE_MIN_SCORE = 0.1; // y que no sea un score ínfimo
+
+    const dynamicThreshold = Math.max(maxScore * RELATIVE_THRESHOLD, ABSOLUTE_MIN_SCORE);
+
+    const topDocs = scoredDocs
+      .filter(item => item.score >= dynamicThreshold)
+      .slice(0, 3)
+      .map(item => item.doc);
+
+    return topDocs || [];
   }
   
 
