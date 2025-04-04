@@ -54,7 +54,7 @@ export class GeminiService {
     
       // Build the complete prompt
       const prompt = 'You are an assistant for a company called Tinybird that answers the user’s questions based on the context provided by documents. You may answer questions using past documents that are no longer passed to you.\n'
-        + 'Your response should not contain special characters like *, #, etc.' 
+        + 'Your response must be in markdown format.' 
         + 'Conversation context: ' + conversationHistory + '\n' 
         + 'User’s question: ' + lastUserMessage.content + '\n'
         + context;

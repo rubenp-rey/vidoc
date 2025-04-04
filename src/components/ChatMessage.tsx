@@ -1,5 +1,6 @@
 import React from 'react';
 import { Message } from '../types/chat';
+import ReactMarkdown from 'react-markdown';
 
 interface ChatMessageProps {
   message: Message;
@@ -19,7 +20,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
           fontWeight:'400',
         }}
       >
-        {message.content}
+        <ReactMarkdown>{message.content}</ReactMarkdown>
         {message.docProposals.length > 0 &&
           <div className="m-2 d-flex gap-3">
             {message.docProposals.map((doc, index)=>

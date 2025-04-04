@@ -86,3 +86,7 @@ body, html {
 .card-body {
   padding: 1rem;
 }
+
+.card.flash {
+  background-color: #FFD5C2;
+}

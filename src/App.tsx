@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react'
+import React, { useState, useCallback, useEffect } from 'react'
 import ReactMarkdown from 'react-markdown'
 import { Chat } from './components/Chat'
 import { EmbeddingsService } from './services/embeddings'
@@ -13,7 +13,17 @@ function App() {
   const [selectedFile, setSelectedFile] = useState<FileItem | null>(null)
   const [markdownContent, setMarkdownContent] = useState<string>('')
   const [files, setFiles] = useState<FileItem[]>([])
+  const [flash, setFlash] = useState(false)
   const embeddingsService = EmbeddingsService.getInstance()
+
+  useEffect(() => {
+    if (!markdownContent) return;
+  
+    setFlash(true);
+    const timeout = setTimeout(() => setFlash(false), 150);
+  
+    return () => clearTimeout(timeout);
+  }, [markdownContent]);
 
   const handleFileSelect = async (file: FileItem) => {
     setSelectedFile(file)
@@ -135,7 +145,7 @@ function App() {
           </div>
 
           {/* Área de visualización de markdown */}
-          <div className="card" style={{ width: 'calc(50% - 6px)', padding: '1rem' }}>
+          <div className={`card ${flash ? 'flash' : ''}`} style={{ width: 'calc(50% - 6px)', padding: '1rem', transition: 'background-color 0.5s ease' }}>
             {selectedFile &&
               <div className="card-header bg-white">
                 <h5 className="card-title mb-0">
