@@ -104,10 +104,13 @@ export class EmbeddingsService {
     scoredDocs.sort((a, b) => b.score - a.score);
 
     const maxScore = scoredDocs[0]?.score || 0;
-    const RELATIVE_THRESHOLD = 0.7; // al menos 50% del mejor
+    const RELATIVE_THRESHOLD = 0.5; // al menos 50% del mejor
     const ABSOLUTE_MIN_SCORE = 0.1; // y que no sea un score ínfimo
 
     const dynamicThreshold = Math.max(maxScore * RELATIVE_THRESHOLD, ABSOLUTE_MIN_SCORE);
+
+    console.log("SCORES:")
+    console.log(scoredDocs.map((doc)=>doc.score))
 
     const topDocs = scoredDocs
       .filter(item => item.score >= dynamicThreshold)

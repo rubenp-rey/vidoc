@@ -40,6 +40,7 @@ export class GeminiService {
         }
       })
 
+      console.log("LAST USER MESSAGE:", lastUserMessage)
       // Buscar documentos relevantes
       const relevantDocs = await this.embeddingsService.findMostRelevants(lastUserMessage.content);
       
